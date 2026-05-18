@@ -1,0 +1,44 @@
+---
+- name: Implantar e Executar Script de Laboratorio
+  hosts: all
+  gather_facts: no
+  vars:
+    remote_temp_dir: "C:\\Temp\\lab_installer"
+    local_source_dir: "../"
+  
+  tasks:
+    - name: Criar diretorio temporario no destino
+      win_file:
+        path: "{{ remote_temp_dir }}"
+        state: directory
+
+    - name: Copiar arquivos do projeto para o destino
+      win_copy:
+        src: "{{ local_source_dir }}"
+        dest: "{{ remote_temp_dir }}"
+        # Ignorar o diretorio ansible para nao copiar recursivamente o proprio playbook
+        exclude: "ansible"
+
+    - name: Executar setup_lab.ps1
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        .\setup_lab.ps1 -NonInteractive
+      args:
+        chdir: "{{ remote_temp_dir }}"
+      register: script_output
+      ignore_errors: yes
+
+    - name: Exibir saida da execucao
+      debug:
+        var: script_output.stdout_lines
+
+    - name: Exibir erros (se houver)
+      debug:
+        var: script_output.stderr_lines
+      when: script_output.stderr != ""
+
+    - name: Limpar arquivos temporarios
+      win_file:
+        path: "{{ remote_temp_dir }}"
+        state: absent
+      when: script_output.rc == 0

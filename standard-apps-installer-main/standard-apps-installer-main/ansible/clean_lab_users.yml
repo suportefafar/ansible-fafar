@@ -1,0 +1,35 @@
+---
+- name: Limpeza de Pastas e Redefinicao de Papel de Parede
+  hosts: all
+  gather_facts: no
+  vars:
+    remote_temp_dir: "C:\\Temp\\lab_installer"
+    local_source_dir: "../scripts/clean_lab_users.ps1"
+  
+  tasks:
+    - name: Criar diretorio temporario no destino
+      win_file:
+        path: "{{ remote_temp_dir }}"
+        state: directory
+
+    - name: Copiar script de limpeza para a VM
+      win_copy:
+        src: "{{ local_source_dir }}"
+        dest: "{{ remote_temp_dir }}\\clean_lab_users.ps1"
+
+    - name: Executar script de limpeza
+      win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        .\clean_lab_users.ps1
+      args:
+        chdir: "{{ remote_temp_dir }}"
+      register: clean_output
+
+    - name: Exibir saida do script
+      debug:
+        var: clean_output.stdout_lines
+
+    - name: Limpar script temporario
+      win_file:
+        path: "{{ remote_temp_dir }}\\clean_lab_users.ps1"
+        state: absent
