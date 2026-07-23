@@ -1,0 +1,56 @@
+---
+- name: Transferir ZIP de Sincronizacao, extrair no C:\ e executar o schedule
+  hosts: all
+  gather_facts: no
+  vars:
+    # --- CONFIGURACOES ---
+    # Caminho local onde esta o seu arquivo ZIP
+    local_zip_path: "../scripts/sync-datetime.zip"
+    
+    # Caminho temporario para o ZIP no destino
+    remote_zip_path: "C:\\Temp\\sync-datetime.zip"
+    
+    # Pasta raiz onde o ZIP sera extraido (o ZIP ja contem a pasta sync-datetime)
+    remote_extract_dir: "C:\\sync-datetime"
+    
+    # Pasta final apos a extracao
+    target_dir: "C:\\sync-datetime"
+    
+  tasks:
+    - name: Garantir que o diretorio temporario (C:\Temp) exista
+      win_file:
+        path: "C:\\Temp"
+        state: directory
+
+    - name: Copiar arquivo ZIP para todos os PCs do inventario
+      win_copy:
+        src: "{{ local_zip_path }}"
+        dest: "{{ remote_zip_path }}"
+
+    - name: Extrair o arquivo ZIP no C:\
+      win_unzip:
+        src: "{{ remote_zip_path }}"
+        dest: "{{ remote_extract_dir }}"
+        delete_archive: no
+
+    - name: Executar o scheduale-sync.bat para criar a tarefa agendada
+      win_shell: |
+        if (Test-Path ".\scheduale-sync.bat") {
+            .\scheduale-sync.bat
+            Write-Host "Tarefa agendada criada com sucesso."
+        } else {
+            Write-Error "Arquivo scheduale-sync.bat nao encontrado!"
+            exit 1
+        }
+      args:
+        chdir: "{{ target_dir }}"
+      register: schedule_output
+
+    - name: Exibir resultado da execucao
+      debug:
+        var: schedule_output.stdout_lines
+
+    - name: Limpar o arquivo ZIP temporario
+      win_file:
+        path: "{{ remote_zip_path }}"
+        state: absent

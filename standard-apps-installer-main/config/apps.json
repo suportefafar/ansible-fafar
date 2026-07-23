@@ -1,0 +1,12 @@
+{
+    "packages": [
+        "googlechrome",
+        "firefox",
+        "adobereader",
+        "avastfreeantivirus",
+        "vlc",
+        "7zip",
+        "jre8",
+        "anydesk.install"
+    ]
+}
