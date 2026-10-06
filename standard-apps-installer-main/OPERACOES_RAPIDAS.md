@@ -50,7 +50,44 @@
 # Remove arquivos de Desktop, Documents, Downloads, Pictures e Videos do FARMANET.
 # ATENCAO: irreversivel!
 
+# Opção A: Executar localmente nesta máquina
 .\scripts\04-Diagnostico\clean_lab_users.ps1
+
+# Opção B: Disparar em massa para todo o laboratório (via rede/WinRM)
+.\scripts\03-Deploy-Massa\disparar_clean_lab.ps1
+
+---
+
+## 7. REMOVER INSTALADOR E ATALHOS QUEBRADOS DO EPI INFO
+# Remove executáveis de instalação (*EpiInfo*.exe, setup, etc.) e atalhos inválidos da Área de Trabalho.
+# Garante atalho funcional para a instalação válida do Epi Info.
+
+# Opção A: Executar localmente nesta máquina
+.\scripts\04-Diagnostico\remover_instalador_epinfo.ps1
+
+# Opção B: Disparar em massa para todo o laboratório (via rede/WinRM)
+.\scripts\03-Deploy-Massa\disparar_remover_instalador_epinfo.ps1
+
+---
+
+## 8. INSTALAR EPI INFO 7.2.6.0 (PASTA CDC -> DOWNLOADS)
+# Copia a pasta apps/CDC para Downloads das máquinas e gera o atalho "EPI - Funcionando" na Área de Trabalho.
+# Concede permissões totais para execução sem senha de administrador.
+
+# Opção A: Executar localmente nesta máquina
+.\scripts\02-Instalacao\instalar_epiinfo_cdc.ps1
+
+# Opção B: Disparar em massa para todo o laboratório (via rede/WinRM)
+.\scripts\03-Deploy-Massa\disparar_deploy_epiinfo_cdc.ps1
+
+---
+
+## 9. COPIAR Epi_Info_7.zip PARA TODAS AS MAQUINAS + ATALHO "EPI - Definitivo"
+# Copia apps\Epi_Info_7.zip para C:\Users\Public\Downloads, extrai em ...\Downloads\Epi_Info_7
+# e cria o atalho "EPI - Definitivo" (-> Launch Epi Info 7.exe) na Area de Trabalho publica.
+# Para outro destino: -Destino "C:\Temp"
+
+.\scripts\03-Deploy-Massa\copiar_zip_epiinfo.ps1
 
 ---
 
