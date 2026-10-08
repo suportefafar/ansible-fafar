@@ -31,8 +31,19 @@
 ---
 
 ## 4. DEPLOY MASSIVO — SINCRONIZAR DATA/HORA (todas as maquinas)
+# Dispara a tarefa SyncTimeAtLogon (auto-detecta a sub-rede; avisa PCs sem a tarefa).
+# A tarefa roda um SERVICO que, em cada ciclo, executa EM ORDEM e TESTA apos cada metodo:
+#   1) Cronos NTP (cronos.farmacia.ufmg.br, UDP/123)  -> Set-Date manual -> testa
+#   2) Cronos HTTP (https://cronos.farmacia.ufmg.br/time) -> Set-Date manual -> testa
+#   3) Windows (w32tm /resync) -> testa
+#   4) NTP publico (NTP.br/Google) -> Set-Date manual -> testa (ultimo recurso)
+# O primeiro teste que confirmar a hora correta encerra o loop; senao repete o ciclo.
+# Tudo e registrado em C:\sync-datetime\logs\sync-hora_<data>.log em cada PC.
 
 .\scripts\03-Deploy-Massa\forcar_sincronizacao_hora.ps1
+
+# Conferir se as maquinas estao com o horario correto (comparado ao Host):
+.\scripts\04-Diagnostico\verificar_horario.ps1
 
 ---
 
