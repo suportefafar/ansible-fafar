@@ -122,35 +122,25 @@ function Invoke-TimeSync {
             Write-Log "DEBUG timezone já corresponde ao alvo; poll=$poll; timezone='$timezone'." 'DEBUG'
         }
 
-        $probeResult = Invoke-LoggedCommand -FilePath $w32tm -Arguments @('/stripchart', "/computer:$NtpServer", '/samples:1', '/dataonly') -Description "poll=$poll consultar resposta NTP do Cronos"
-        $probe = $probeResult.Output
-        $ntpResponded = ($probeResult.ExitCode -eq 0 -and $probe -match '(?m)^\s*\d{1,2}:\d{2}:\d{2}')
-        Write-Log "DEBUG resultado da consulta NTP; runId=$runId; poll=$poll; respondeu=$ntpResponded; exitCode=$($probeResult.ExitCode); output='$probe'." 'DEBUG'
-
-        $resyncOutput = ''
-        $resyncSucceeded = $false
-        if ($ntpResponded) {
-            $resyncResult = Invoke-LoggedCommand -FilePath $w32tm -Arguments @('/resync', '/rediscover') -Description "poll=$poll solicitar sincronização do Windows Time"
-            $resyncOutput = $resyncResult.Output
-            $resyncSucceeded = ($resyncResult.ExitCode -eq 0)
-        }
-        else {
-            Write-Log "DEBUG sincronização /resync não solicitada porque Cronos não respondeu; runId=$runId; poll=$poll." 'DEBUG'
-        }
+        # Use the Windows Time NTP client itself for the attempt. The separate
+        # w32tm /stripchart diagnostic sends an older NTP packet version that
+        # Cronos intentionally rejects, so it cannot be used as a gate here.
+        $resyncResult = Invoke-LoggedCommand -FilePath $w32tm -Arguments @('/resync', '/rediscover') -Description "poll=$poll solicitar sincronização do Windows Time com o Cronos"
+        $resyncSucceeded = ($resyncResult.ExitCode -eq 0)
 
         $timezoneCheck = Invoke-LoggedCommand -FilePath $tzutil -Arguments @('/g') -Description "poll=$poll confirmar timezone"
         $timezone = $timezoneCheck.Output.Trim()
         $sourceCheck = Invoke-LoggedCommand -FilePath $w32tm -Arguments @('/query', '/source') -Description "poll=$poll consultar fonte de horário ativa"
         $source = $sourceCheck.Output.Trim()
         $validTimeSource = ($source -match [regex]::Escape($NtpServer))
-        Write-Log "DEBUG verificação do estado; runId=$runId; poll=$poll; timezone='$timezone'; timezoneCorreto=$($timezone -eq $TimeZoneId); fonte='$source'; fonteCorreta=$validTimeSource; ntpRespondeu=$ntpResponded; resyncBemSucedido=$resyncSucceeded." 'DEBUG'
+        Write-Log "DEBUG verificação do estado; runId=$runId; poll=$poll; timezone='$timezone'; timezoneCorreto=$($timezone -eq $TimeZoneId); fonte='$source'; fonteCorreta=$validTimeSource; resyncBemSucedido=$resyncSucceeded." 'DEBUG'
 
-        if ($timezone -eq $TimeZoneId -and $ntpResponded -and $resyncSucceeded -and $validTimeSource) {
+        if ($timezone -eq $TimeZoneId -and $resyncSucceeded -and $validTimeSource) {
             Write-Log "Sincronização concluída; runId=$runId; poll=$poll; timezone='$timezone'; fonte='$source'." 'INFO'
             return
         }
 
-        Write-Log "Aguardando próxima tentativa; runId=$runId; poll=$poll; timezoneCorreto=$($timezone -eq $TimeZoneId); ntpRespondeu=$ntpResponded; resyncBemSucedido=$resyncSucceeded; fonteCorreta=$validTimeSource." 'INFO'
+        Write-Log "Aguardando próxima tentativa; runId=$runId; poll=$poll; timezoneCorreto=$($timezone -eq $TimeZoneId); resyncBemSucedido=$resyncSucceeded; fonteCorreta=$validTimeSource." 'INFO'
 
         $remainingMilliseconds = [Math]::Max(0, 5000 - [int]$cycle.ElapsedMilliseconds)
         Write-Log "DEBUG pausa antes do próximo polling; runId=$runId; poll=$poll; elapsedMs=$($cycle.ElapsedMilliseconds); sleepMs=$remainingMilliseconds." 'DEBUG'

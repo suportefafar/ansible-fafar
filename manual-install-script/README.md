@@ -7,7 +7,7 @@ O arquivo [Sync-TimeAtLogon.ps1](Sync-TimeAtLogon.ps1) executa duas ações:
 1. Define o fuso horário do laboratório como `E. South America Standard Time` (UTC−03:00, São Paulo).
 2. Solicita a sincronização do relógio pelo serviço nativo Windows Time (`W32Time`) com `cronos.farmacia.ufmg.br`, usando NTP em UDP/123.
 
-O NTP corrige o instante do relógio; ele não define fuso horário. Por isso o script configura e verifica o fuso separadamente. Após o logon, a tarefa consulta somente o Cronos a cada cinco segundos por NTP/UDP. Quando o servidor responde, solicita a sincronização ao Windows Time e verifica o fuso e a fonte de horário ativa. Continua tentando a cada cinco segundos até confirmar ambos; se a rede estiver indisponível, a tarefa permanece aguardando. Não consulta servidores NTP públicos, serviços de horário na internet nem usa um fallback externo.
+O NTP corrige o instante do relógio; ele não define fuso horário. Por isso o script configura e verifica o fuso separadamente. Após o logon, a tarefa solicita ao cliente NTP nativo do Windows uma sincronização com o Cronos e verifica o fuso e a fonte de horário ativa. Continua tentando a cada cinco segundos até confirmar ambos; se a rede estiver indisponível, a tarefa permanece aguardando. Não usa `w32tm /stripchart` como teste, pois essa sonda diagnóstica envia pacotes de versão antiga que o Cronos rejeita. Não consulta servidores NTP públicos, serviços de horário na internet nem usa um fallback externo.
 
 O serviço NTP do Cronos fornece a hora do relógio do sistema no host onde ele roda. O código cliente deste repositório não consulta uma fonte externa. A configuração do relógio do sistema operacional do host Cronos, porém, é feita fora deste script e precisa ser conferida no próprio servidor. NTP transmite o instante UTC, não o timezone; neste cliente, o fuso é definido pela política fixa do laboratório (`E. South America Standard Time`).
 
@@ -21,7 +21,7 @@ O serviço NTP do Cronos fornece a hora do relógio do sistema no host onde ele 
    & 'C:\Users\Administrador\Downloads\manual-install-script\Sync-TimeAtLogon.ps1'
    ```
 
-4. A instalação copia o script para `C:\Program Files\FAFAR\SyncTime`, cria a tarefa `FAFAR-SincronizarHoraNoLogon` para logon de qualquer usuário e inicia a tarefa em segundo plano. Ela consulta a cada cinco segundos até confirmar o fuso e a fonte de horário; se Cronos ou a rede não responderem, continuará tentando. A tarefa também será acionada nos próximos logons.
+4. A instalação copia o script para `C:\Program Files\FAFAR\SyncTime`, cria a tarefa `FAFAR-SincronizarHoraNoLogon` para logon de qualquer usuário e inicia a tarefa em segundo plano. Ela solicita a sincronização pelo Windows Time e verifica a cada cinco segundos até confirmar o fuso e a fonte de horário; se Cronos ou a rede não responderem, continuará tentando. A tarefa também será acionada nos próximos logons.
 5. Para conferir a tarefa, abra **Agendador de Tarefas → Biblioteca do Agendador de Tarefas** e localize `FAFAR-SincronizarHoraNoLogon`. O log detalhado fica em `C:\ProgramData\FAFAR\SyncTime\Sync-TimeAtLogon.log`.
 
 O arquivo registra em nível detalhado cada polling, timezone observado e definido, saída e código de retorno dos comandos `w32tm`/`tzutil`, fonte NTP ativa, estado do serviço Windows Time, instalação/início da tarefa e erros. Quando o log chega a 10 MB, ele é rotacionado; ficam o arquivo atual e até três versões anteriores com sufixos `.1`, `.2` e `.3` no mesmo diretório.
