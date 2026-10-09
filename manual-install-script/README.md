@@ -13,16 +13,10 @@ O serviço NTP do Cronos fornece a hora do relógio do sistema no host onde ele 
 
 ## Instalação manual
 
-1. Copie a pasta para o computador. Se a instituição fornecer uma cópia assinada, use essa cópia sem editar o arquivo.
-2. Abra **Windows PowerShell como Administrador**.
-3. Execute o script pelo caminho onde foi copiado, por exemplo:
-
-   ```powershell
-   & 'C:\Users\Administrador\Downloads\manual-install-script\Sync-TimeAtLogon.ps1'
-   ```
-
-4. A instalação copia o script para `C:\Program Files\FAFAR\SyncTime`, cria a tarefa `FAFAR-SincronizarHoraNoLogon` para logon de qualquer usuário e inicia a tarefa em segundo plano. Ela solicita a sincronização pelo Windows Time e verifica a cada cinco segundos até confirmar o fuso e a fonte de horário; se Cronos ou a rede não responderem, continuará tentando. A tarefa também será acionada nos próximos logons.
-5. Para conferir a tarefa, abra **Agendador de Tarefas → Biblioteca do Agendador de Tarefas** e localize `FAFAR-SincronizarHoraNoLogon`. O log detalhado fica em `C:\ProgramData\FAFAR\SyncTime\Sync-TimeAtLogon.log`.
+1. Copie a pasta para o computador, mantendo `Instalar-SyncTime.cmd` e `Sync-TimeAtLogon.ps1` juntos. Se a instituição fornecer uma cópia assinada, use essa cópia sem editar o arquivo.
+2. Clique duas vezes em `Instalar-SyncTime.cmd` e confirme a solicitação do **Controle de Conta de Usuário (UAC)**. O instalador abre o PowerShell elevado e executa o script de sincronização. Ele não altera a política de execução do PowerShell; se essa política bloquear o arquivo, siga as orientações da seção sobre distribuição confiável abaixo.
+3. A instalação copia o script para `C:\Program Files\FAFAR\SyncTime`, cria a tarefa `FAFAR-SincronizarHoraNoLogon` para logon de qualquer usuário e inicia a tarefa em segundo plano. Ela solicita a sincronização pelo Windows Time e verifica a cada cinco segundos até confirmar o fuso e a fonte de horário; se Cronos ou a rede não responderem, continuará tentando. A tarefa também será acionada nos próximos logons.
+4. Para conferir a tarefa, abra **Agendador de Tarefas → Biblioteca do Agendador de Tarefas** e localize `FAFAR-SincronizarHoraNoLogon`. O log detalhado fica em `C:\ProgramData\FAFAR\SyncTime\Sync-TimeAtLogon.log`.
 
 O arquivo registra em nível detalhado cada polling, timezone observado e definido, saída e código de retorno dos comandos `w32tm`/`tzutil`, fonte NTP ativa, estado do serviço Windows Time, instalação/início da tarefa e erros. Quando o log chega a 10 MB, ele é rotacionado; ficam o arquivo atual e até três versões anteriores com sufixos `.1`, `.2` e `.3` no mesmo diretório.
 
